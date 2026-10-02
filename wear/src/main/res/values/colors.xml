@@ -1,0 +1,9 @@
+<resources>
+    <color name="neon_cyan">#00F0FF</color>
+    <color name="neon_purple">#B347FF</color>
+    <color name="neon_green">#00FF88</color>
+    <color name="neon_orange">#FF9500</color>
+    <color name="neon_red">#FF1744</color>
+    <color name="dark_bg">#0A0A12</color>
+    <color name="card_bg">#161628</color>
+</resources>

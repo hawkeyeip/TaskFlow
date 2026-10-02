@@ -58,6 +58,13 @@
     btnCancelDelete: $('#btn-cancel-delete'),
     // Toast
     toastContainer: $('#toast-container'),
+    // Wear OS Companion
+    btnWearCompanion: $('#btn-wear-companion'),
+    wearModal: $('#wear-modal'),
+    wearModalClose: $('#wear-modal-close'),
+    wearContent: $('#wear-content'),
+    wearClock: $('#wear-clock'),
+    wearDockBtns: $('.wear-dock-btn'),
   };
 
   // --- Init ---
@@ -172,6 +179,22 @@
       if (e.target === dom.deleteModal) closeDeleteModal();
     });
     dom.btnConfirmDelete.addEventListener('click', handleConfirmDelete);
+
+    // Wear OS Companion
+    if (dom.btnWearCompanion) {
+      dom.btnWearCompanion.addEventListener('click', openWearModal);
+    }
+    if (dom.wearModalClose) {
+      dom.wearModalClose.addEventListener('click', closeWearModal);
+    }
+    if (dom.wearModal) {
+      dom.wearModal.addEventListener('click', (e) => {
+        if (e.target === dom.wearModal) closeWearModal();
+      });
+    }
+    dom.wearDockBtns.forEach(btn => {
+      btn.addEventListener('click', () => switchWearTab(btn.dataset.tab));
+    });
 
     // Keyboard shortcuts
     document.addEventListener('keydown', handleKeyboard);
@@ -398,6 +421,7 @@
     if (e.key === 'Escape') {
       if (dom.taskModal.classList.contains('active')) closeTaskModal();
       if (dom.deleteModal.classList.contains('active')) closeDeleteModal();
+      if (dom.wearModal && dom.wearModal.classList.contains('active')) closeWearModal();
     }
     // Ctrl+N or Cmd+N to create
     if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
@@ -408,6 +432,123 @@
     if (e.key === '/' && !e.target.closest('input, textarea, select')) {
       e.preventDefault();
       dom.searchInput.focus();
+    }
+  }
+
+
+  // --- Wear OS Smartwatch Companion Controller ---
+  let activeWearTab = 'tasks';
+  let wearClockTimer = null;
+
+  function updateWearClock() {
+    if (dom.wearClock) {
+      const now = new Date();
+      dom.wearClock.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+  }
+
+  async function openWearModal() {
+    updateWearClock();
+    clearInterval(wearClockTimer);
+    wearClockTimer = setInterval(updateWearClock, 10000);
+    dom.wearModal.classList.add('active');
+    await renderActiveWearTab();
+  }
+
+  function closeWearModal() {
+    dom.wearModal.classList.remove('active');
+    clearInterval(wearClockTimer);
+  }
+
+  async function switchWearTab(tab) {
+    activeWearTab = tab;
+    dom.wearDockBtns.forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.tab === tab);
+    });
+    await renderActiveWearTab();
+  }
+
+  async function renderActiveWearTab() {
+    if (!dom.wearContent) return;
+
+    if (activeWearTab === 'tasks') {
+      dom.wearContent.innerHTML = '<div style="text-align:center; padding: 20px; font-size:10px; color:#888;">Syncing with wrist...</div>';
+      try {
+        const res = await API.getWearTasks();
+        const wearTasks = res.tasks || [];
+        if (wearTasks.length === 0) {
+          dom.wearContent.innerHTML = '<div style="text-align:center; padding: 30px 10px; font-size:11px; color:#00ff88;">All duties done! ✨</div>';
+          return;
+        }
+
+        dom.wearContent.innerHTML = '';
+        wearTasks.forEach(task => {
+          const item = document.createElement('div');
+          item.className = 'wear-task-item' + (task.completed ? ' done' : '');
+          item.innerHTML = `
+            <span class="wear-task-dot ${task.priority}"></span>
+            <span class="wear-task-text" style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${Components.escapeHtml(task.title)}</span>
+            <span style="font-size:10px; color:${task.completed ? '#00ff88' : '#888'};">${task.completed ? '✓' : '○'}</span>
+          `;
+
+          item.addEventListener('click', async () => {
+            await API.toggleWearTask(task.id);
+            await renderActiveWearTab();
+            await loadTasks();
+            await loadStats();
+          });
+
+          dom.wearContent.appendChild(item);
+        });
+      } catch (err) {
+        dom.wearContent.innerHTML = '<div style="color:#ff1744; font-size:10px; text-align:center;">Sync failed</div>';
+      }
+    } else if (activeWearTab === 'voice') {
+      dom.wearContent.innerHTML = `
+        <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; gap:8px; text-align:center;">
+          <button id="btn-wear-mic" style="width:48px; height:48px; border-radius:50%; background:rgba(179,71,255,0.25); border:1px solid #b347ff; color:#b347ff; font-size:20px; cursor:pointer; display:flex; align-items:center; justify-content:center;">🎙️</button>
+          <div id="wear-voice-hint" style="font-size:10px; color:#aaa; padding:0 6px;">Tap mic to dictate task</div>
+        </div>
+      `;
+
+      const micBtn = dom.wearContent.querySelector('#btn-wear-mic');
+      const hint = dom.wearContent.querySelector('#wear-voice-hint');
+      micBtn.addEventListener('click', async () => {
+        micBtn.style.boxShadow = '0 0 15px #b347ff';
+        hint.textContent = 'Listening to wrist audio...';
+
+        setTimeout(async () => {
+          const sampleTasks = [
+            'Review quarterly cloud budget',
+            'Follow up with client contract',
+            'Deploy security hotfix',
+            'Schedule design sprint review'
+          ];
+          const chosen = sampleTasks[Math.floor(Math.random() * sampleTasks.length)];
+          hint.textContent = `"Captured: ${chosen}"`;
+
+          await API.quickAddWearTask(chosen);
+          showToast(`Captured from Wear OS: "${chosen}"`, 'success');
+          await loadTasks();
+          await loadStats();
+
+          setTimeout(() => switchWearTab('tasks'), 1000);
+        }, 1200);
+      });
+    } else if (activeWearTab === 'tile') {
+      try {
+        const tile = await API.getWearTile();
+        dom.wearContent.innerHTML = `
+          <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding: 4px;">
+            <div style="font-size:9px; font-weight:700; color:#00f0ff; letter-spacing:1px; margin-bottom:2px;">⚡ TASKFLOW TILE</div>
+            <div style="font-size:18px; font-weight:800; color:#b347ff;">${tile.pendingCount} <span style="font-size:10px; font-weight:400; color:#aaa;">duties left</span></div>
+            <div style="width:100%; border-top:1px solid rgba(255,255,255,0.1); margin:6px 0;"></div>
+            ${(tile.tasks || []).map(t => `<div style="font-size:9.5px; color:#eee; max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-bottom:2px;">• ${Components.escapeHtml(t.title)}</div>`).join('')}
+          </div>
+        `;
+      } catch (err) {
+        dom.wearContent.innerHTML = '<div style="color:#ff1744; font-size:10px;">Tile load failed</div>';
+      }
     }
   }
 

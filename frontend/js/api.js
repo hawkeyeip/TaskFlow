@@ -68,6 +68,31 @@ const API = (() => {
         method: 'POST',
         body: JSON.stringify({ orders })
       });
+    },
+
+    // Wear OS Gateway Client Methods
+    async getWearTasks() {
+      const res = await fetch('/api/wear/tasks');
+      return res.json();
+    },
+
+    async toggleWearTask(id) {
+      const res = await fetch(`/api/wear/tasks/${id}/toggle`, { method: 'POST' });
+      return res.json();
+    },
+
+    async quickAddWearTask(title) {
+      const res = await fetch('/api/wear/tasks/quick-add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title })
+      });
+      return res.json();
+    },
+
+    async getWearTile() {
+      const res = await fetch('/api/wear/tile');
+      return res.json();
     }
   };
 })();

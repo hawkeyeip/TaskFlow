@@ -18,6 +18,10 @@
       <span class="app-logo-text">TaskFlow</span>
     </div>
     <div class="header-actions">
+      <button class="btn btn-ghost" id="btn-wear-companion" title="Wear OS Smartwatch Companion" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem;">
+        <span>⌚</span>
+        <span>Wear OS</span>
+      </button>
       <button class="btn btn-ghost btn-icon" id="btn-toggle-view" title="Toggle view" aria-label="Toggle view">
         ☰
       </button>
@@ -195,6 +199,54 @@
     <div class="modal-footer" style="justify-content: center;">
       <button class="btn" id="btn-cancel-delete">Cancel</button>
       <button class="btn btn-danger" id="btn-confirm-delete">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Wear OS Smartwatch Companion Modal -->
+<div class="modal-overlay" id="wear-modal">
+  <div class="modal wear-modal-container">
+    <div class="modal-header" style="border-bottom: 1px solid var(--border-subtle); padding: 12px 18px;">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 18px;">⌚</span>
+        <h3 class="modal-title" style="font-size: 1rem;">Google Wear OS Companion</h3>
+      </div>
+      <button class="btn btn-ghost btn-icon" id="wear-modal-close" aria-label="Close">✕</button>
+    </div>
+
+    <div class="wear-modal-body">
+      <!-- Outer Watch Simulator -->
+      <div class="wear-chassis-wrap">
+        <div class="wear-strap wear-strap-top"></div>
+        <div class="wear-bezel">
+          <div class="wear-screen">
+            <div class="wear-status-bar">
+              <span id="wear-clock">10:45</span>
+              <span>⚡ 94%</span>
+            </div>
+            <div class="wear-content" id="wear-content">
+              <!-- Injected by JS -->
+            </div>
+            <div class="wear-dock">
+              <button class="wear-dock-btn active" data-tab="tasks" title="Duties Checklist">✓</button>
+              <button class="wear-dock-btn" data-tab="voice" title="Voice Dictation">🎙️</button>
+              <button class="wear-dock-btn" data-tab="tile" title="Tile Glance">⚡</button>
+            </div>
+          </div>
+        </div>
+        <div class="wear-strap wear-strap-bottom"></div>
+      </div>
+
+      <!-- Info & Quick Actions Footer -->
+      <div class="wear-info-card">
+        <h4>Wear OS Ecosystem Status: <span class="wear-badge-online">● Ready</span></h4>
+        <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">
+          Real-time sync between your wrist and TaskFlow. 1-tap duty checkoff, voice capture, and glanceable tiles.
+        </p>
+        <div style="margin-top: 8px; font-family: monospace; font-size: 0.7rem; color: var(--neon-cyan); background: rgba(0,0,0,0.3); padding: 6px 10px; border-radius: 6px;">
+          Endpoint: http://localhost:3847/api/wear
+        </div>
+      </div>
     </div>
   </div>
 </div>

@@ -3,6 +3,7 @@ const cors = require('cors');
 const path = require('path');
 const db = require('./db');
 const taskRoutes = require('./routes/tasks');
+const wearRoutes = require('./routes/wear');
 
 const app = express();
 const PORT = process.env.PORT || 3847;
@@ -16,6 +17,7 @@ app.use(express.static(path.join(__dirname, '..', 'frontend')));
 
 // API routes
 app.use('/api/tasks', taskRoutes);
+app.use('/api/wear', wearRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

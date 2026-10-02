@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">TaskFlow</string>
+    <string name="tile_name">TaskFlow Duties</string>
+    <string name="tile_description">Quick view of top tasks and daily progress.</string>
+    <string name="complication_name">Pending Tasks</string>
+    <string name="no_tasks">All duties done! ✨</string>
+    <string name="quick_add_hint">Speak task title...</string>
+</resources>
