@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Modern Task Manager with Kanban board, priority tagging, and persistent storage">
+  <title>Task Manager — Organize. Prioritize. Execute.</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="app-container" id="app">
+
+  <!-- Header -->
+  <header class="app-header">
+    <div class="app-logo">
+      <div class="app-logo-icon">⚡</div>
+      <span class="app-logo-text">TaskFlow</span>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-ghost btn-icon" id="btn-toggle-view" title="Toggle view" aria-label="Toggle view">
+        ☰
+      </button>
+    </div>
+  </header>
+
+  <!-- Stats Bar -->
+  <div class="stats-bar" id="stats-bar">
+    <div class="stat-chip todo">
+      <span>To Do</span>
+      <span class="stat-value" id="stat-todo">0</span>
+    </div>
+    <div class="stat-chip in-progress">
+      <span>In Progress</span>
+      <span class="stat-value" id="stat-progress">0</span>
+    </div>
+    <div class="stat-chip done">
+      <span>Done</span>
+      <span class="stat-value" id="stat-done">0</span>
+    </div>
+    <div class="stat-chip overdue">
+      <span>Overdue</span>
+      <span class="stat-value" id="stat-overdue">0</span>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="search-input" placeholder="Search tasks..." aria-label="Search tasks">
+    </div>
+
+    <div class="filter-group">
+      <span class="filter-label">Priority</span>
+      <select class="filter-select" id="filter-priority" aria-label="Filter by priority">
+        <option value="all">All</option>
+        <option value="critical">Critical</option>
+        <option value="high">High</option>
+        <option value="medium">Medium</option>
+        <option value="low">Low</option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <span class="filter-label">Sort</span>
+      <select class="filter-select" id="sort-select" aria-label="Sort by">
+        <option value="position">Position</option>
+        <option value="priority">Priority</option>
+        <option value="due_date">Due Date</option>
+        <option value="created_at">Created</option>
+        <option value="title">Title</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Board -->
+  <main class="main-content">
+    <div class="board-view" id="board">
+      <!-- To Do Column -->
+      <div class="board-column column-todo" data-status="todo">
+        <div class="column-header">
+          <div class="column-title">
+            <span class="column-dot"></span>
+            To Do
+          </div>
+          <span class="column-count" id="count-todo">0</span>
+        </div>
+        <div class="column-tasks" id="tasks-todo" data-status="todo"></div>
+      </div>
+
+      <!-- In Progress Column -->
+      <div class="board-column column-progress" data-status="in_progress">
+        <div class="column-header">
+          <div class="column-title">
+            <span class="column-dot"></span>
+            In Progress
+          </div>
+          <span class="column-count" id="count-progress">0</span>
+        </div>
+        <div class="column-tasks" id="tasks-progress" data-status="in_progress"></div>
+      </div>
+
+      <!-- Done Column -->
+      <div class="board-column column-done" data-status="done">
+        <div class="column-header">
+          <div class="column-title">
+            <span class="column-dot"></span>
+            Done
+          </div>
+          <span class="column-count" id="count-done">0</span>
+        </div>
+        <div class="column-tasks" id="tasks-done" data-status="done"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- FAB -->
+  <button class="fab" id="fab-add" title="Add new task" aria-label="Add new task">＋</button>
+</div>
+
+<!-- Create/Edit Task Modal -->
+<div class="modal-overlay" id="task-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title" id="modal-title">New Task</h2>
+      <button class="btn btn-ghost btn-icon" id="modal-close" aria-label="Close modal">✕</button>
+    </div>
+    <form id="task-form">
+      <div class="modal-body">
+        <input type="hidden" id="task-id">
+
+        <div class="form-group">
+          <label class="form-label" for="task-title-input">Title</label>
+          <input class="form-input" id="task-title-input" type="text" placeholder="What needs to be done?" required autocomplete="off">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="task-desc-input">Description</label>
+          <textarea class="form-textarea" id="task-desc-input" placeholder="Add more details..." rows="3"></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="task-priority-input">Priority</label>
+            <select class="form-select" id="task-priority-input">
+              <option value="low">🟢 Low</option>
+              <option value="medium" selected>🔵 Medium</option>
+              <option value="high">🟡 High</option>
+              <option value="critical">🔴 Critical</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="task-status-input">Status</label>
+            <select class="form-select" id="task-status-input">
+              <option value="todo">To Do</option>
+              <option value="in_progress">In Progress</option>
+              <option value="done">Done</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="task-due-input">Due Date</label>
+          <input class="form-input" id="task-due-input" type="date">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Tags</label>
+          <div class="tag-input-container" id="tag-container">
+            <input class="tag-input" id="tag-input" type="text" placeholder="Add tag and press Enter..." autocomplete="off">
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn" id="btn-cancel-task">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="btn-save-task">Create Task</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal-overlay" id="delete-modal">
+  <div class="modal confirm-dialog">
+    <div class="modal-body">
+      <div class="confirm-icon">🗑️</div>
+      <p class="confirm-text">
+        Delete <span class="confirm-task-name" id="delete-task-name"></span>?<br>
+        This action cannot be undone.
+      </p>
+    </div>
+    <div class="modal-footer" style="justify-content: center;">
+      <button class="btn" id="btn-cancel-delete">Cancel</button>
+      <button class="btn btn-danger" id="btn-confirm-delete">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toast-container"></div>
+
+<script src="js/api.js"></script>
+<script src="js/components.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>
