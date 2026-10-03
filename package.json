@@ -5,14 +5,20 @@
   "main": "backend/server.js",
   "scripts": {
     "start": "node backend/server.js",
-    "dev": "node --watch backend/server.js"
+    "dev": "node --watch backend/server.js",
+    "test": "node backend/test/test_features.js"
   },
-  "keywords": ["task-manager", "sqlite", "express"],
+  "keywords": [
+    "task-manager",
+    "sqlite",
+    "express"
+  ],
   "license": "MIT",
   "dependencies": {
     "better-sqlite3": "^11.0.0",
     "cors": "^2.8.5",
     "express": "^4.21.0",
+    "multer": "^2.4.0",
     "uuid": "^10.0.0"
   }
 }

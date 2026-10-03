@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Modern Task Manager with Kanban board, priority tagging, and persistent storage">
-  <title>Task Manager — Organize. Prioritize. Execute.</title>
+  <meta name="description" content="TaskFlow Enterprise — Next-gen Task & Project Management with Eisenhower Matrix, Real-time Analytics, Multi-user Collaboration, and Smart Wear OS Sync">
+  <title>TaskFlow Enterprise — Organize. Prioritize. Execute.</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -13,137 +13,332 @@
 
   <!-- Header -->
   <header class="app-header">
-    <div class="app-logo">
-      <div class="app-logo-icon">⚡</div>
-      <span class="app-logo-text">TaskFlow</span>
+    <div class="header-left">
+      <div class="app-logo">
+        <div class="app-logo-icon">⚡</div>
+        <span class="app-logo-text">TaskFlow</span>
+      </div>
+
+      <!-- Navigation View Switcher -->
+      <nav class="nav-tabs" role="tablist">
+        <button class="nav-tab active" data-view="board" id="tab-board" role="tab" aria-selected="true">
+          <span>📋</span> Board
+        </button>
+        <button class="nav-tab" data-view="matrix" id="tab-matrix" role="tab" aria-selected="false">
+          <span>🎯</span> Eisenhower Matrix
+        </button>
+        <button class="nav-tab" data-view="analytics" id="tab-analytics" role="tab" aria-selected="false">
+          <span>📊</span> Analytics
+        </button>
+      </nav>
     </div>
-    <div class="header-actions">
-      <button class="btn btn-ghost" id="btn-wear-companion" title="Wear OS Smartwatch Companion" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem;">
+
+    <div class="header-right">
+      <!-- Active User Switcher -->
+      <div class="user-select-wrap" title="Current Workspace User">
+        <select class="user-select" id="user-switcher" aria-label="Switch User">
+          <!-- Injected by JS -->
+        </select>
+      </div>
+
+      <!-- Theme Toggle -->
+      <button class="btn btn-ghost btn-icon" id="btn-theme-toggle" title="Toggle Dark/Light Mode" aria-label="Toggle theme">
+        <span id="theme-icon">🌙</span>
+      </button>
+
+      <!-- Keyboard Shortcuts -->
+      <button class="btn btn-ghost btn-icon" id="btn-shortcuts" title="Keyboard Shortcuts (?)" aria-label="Shortcuts">
+        <span>⌨️</span>
+      </button>
+
+      <!-- Onboarding Tour -->
+      <button class="btn btn-ghost btn-icon" id="btn-tour" title="Interactive Guide & Tour" aria-label="Tour">
+        <span>💡</span>
+      </button>
+
+      <!-- Settings & Backups -->
+      <button class="btn btn-ghost btn-icon" id="btn-settings" title="Settings & Data Backups" aria-label="Settings">
+        <span>⚙️</span>
+      </button>
+
+      <!-- Wear OS Companion -->
+      <button class="btn btn-ghost" id="btn-wear-companion" title="Wear OS Smartwatch Companion">
         <span>⌚</span>
         <span>Wear OS</span>
-      </button>
-      <button class="btn btn-ghost btn-icon" id="btn-toggle-view" title="Toggle view" aria-label="Toggle view">
-        ☰
       </button>
     </div>
   </header>
 
-  <!-- Stats Bar -->
-  <div class="stats-bar" id="stats-bar">
-    <div class="stat-chip todo">
-      <span>To Do</span>
-      <span class="stat-value" id="stat-todo">0</span>
+  <!-- VIEW 1: Kanban Board View -->
+  <div class="view-container active" id="view-board">
+    <!-- Stats Bar -->
+    <div class="stats-bar" id="stats-bar">
+      <div class="stat-chip todo">
+        <span>To Do</span>
+        <span class="stat-value" id="stat-todo">0</span>
+      </div>
+      <div class="stat-chip in-progress">
+        <span>In Progress</span>
+        <span class="stat-value" id="stat-progress">0</span>
+      </div>
+      <div class="stat-chip review">
+        <span>In Review</span>
+        <span class="stat-value" id="stat-review">0</span>
+      </div>
+      <div class="stat-chip done">
+        <span>Done</span>
+        <span class="stat-value" id="stat-done">0</span>
+      </div>
+      <div class="stat-chip overdue">
+        <span>Overdue</span>
+        <span class="stat-value" id="stat-overdue">0</span>
+      </div>
     </div>
-    <div class="stat-chip in-progress">
-      <span>In Progress</span>
-      <span class="stat-value" id="stat-progress">0</span>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="search-input" placeholder="Search tasks, tags, custom fields... (press '/' to focus)" aria-label="Search tasks">
+      </div>
+
+      <div class="filter-group">
+        <span class="filter-label">Assignee</span>
+        <select class="filter-select" id="filter-assignee" aria-label="Filter by assignee">
+          <option value="all">All Assignees</option>
+          <option value="me">Assigned to Me</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <span class="filter-label">Priority</span>
+        <select class="filter-select" id="filter-priority" aria-label="Filter by priority">
+          <option value="all">All Priorities</option>
+          <option value="critical">Critical</option>
+          <option value="high">High</option>
+          <option value="medium">Medium</option>
+          <option value="low">Low</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <span class="filter-label">Quadrant</span>
+        <select class="filter-select" id="filter-quadrant" aria-label="Filter by Eisenhower Quadrant">
+          <option value="all">All Quadrants</option>
+          <option value="do_first">🔥 Q1: Do First</option>
+          <option value="schedule">📅 Q2: Schedule</option>
+          <option value="delegate">👥 Q3: Delegate</option>
+          <option value="eliminate">🗑️ Q4: Eliminate</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <span class="filter-label">Sort</span>
+        <select class="filter-select" id="sort-select" aria-label="Sort by">
+          <option value="position">Position</option>
+          <option value="priority">Priority</option>
+          <option value="due_date">Due Date</option>
+          <option value="created_at">Created</option>
+          <option value="title">Title</option>
+        </select>
+      </div>
+
+      <button class="btn btn-ghost" id="btn-add-column" style="margin-left: auto;" title="Add Custom Workflow Column">
+        <span>+ Column</span>
+      </button>
     </div>
-    <div class="stat-chip done">
-      <span>Done</span>
-      <span class="stat-value" id="stat-done">0</span>
-    </div>
-    <div class="stat-chip overdue">
-      <span>Overdue</span>
-      <span class="stat-value" id="stat-overdue">0</span>
+
+    <!-- Dynamic Board Columns Container -->
+    <main class="main-content">
+      <div class="board-columns-wrap" id="board-columns-container">
+        <!-- Rendered dynamically by JS from database columns -->
+      </div>
+    </main>
+  </div>
+
+  <!-- VIEW 2: Eisenhower Matrix View (2x2 Grid) -->
+  <div class="view-container" id="view-matrix">
+    <div class="matrix-container">
+      <div class="matrix-header">
+        <div>
+          <h2 style="font-size: 1.15rem; font-weight: 800;">🎯 Eisenhower Decision Matrix</h2>
+          <p style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 2px;">
+            Prioritize by urgency and strategic importance. Drag cards or click + to add tasks to quadrants.
+          </p>
+        </div>
+        <button class="btn btn-primary" id="btn-matrix-new-task">+ Add Task</button>
+      </div>
+
+      <div class="matrix-grid">
+        <!-- Q1: Urgent & Important (DO FIRST) -->
+        <div class="matrix-quadrant q1" data-quadrant="do_first">
+          <div class="quadrant-header">
+            <div>
+              <div class="quadrant-title" style="color: var(--neon-red);">🔥 Q1: Urgent & Important (Do First)</div>
+              <div class="quadrant-desc">Critical crises, hard deadlines, fire drills</div>
+            </div>
+            <span class="column-count" id="count-q1">0</span>
+          </div>
+          <div class="quadrant-tasks" id="tasks-q1" data-quadrant="do_first"></div>
+        </div>
+
+        <!-- Q2: Not Urgent & Important (SCHEDULE) -->
+        <div class="matrix-quadrant q2" data-quadrant="schedule">
+          <div class="quadrant-header">
+            <div>
+              <div class="quadrant-title" style="color: var(--neon-cyan);">📅 Q2: Important, Not Urgent (Schedule)</div>
+              <div class="quadrant-desc">Strategic planning, deep work, architecture, long-term ROI</div>
+            </div>
+            <span class="column-count" id="count-q2">0</span>
+          </div>
+          <div class="quadrant-tasks" id="tasks-q2" data-quadrant="schedule"></div>
+        </div>
+
+        <!-- Q3: Urgent & Not Important (DELEGATE) -->
+        <div class="matrix-quadrant q3" data-quadrant="delegate">
+          <div class="quadrant-header">
+            <div>
+              <div class="quadrant-title" style="color: var(--neon-amber);">👥 Q3: Urgent, Not Important (Delegate)</div>
+              <div class="quadrant-desc">Routine queries, interruptions, meetings, handoffs</div>
+            </div>
+            <span class="column-count" id="count-q3">0</span>
+          </div>
+          <div class="quadrant-tasks" id="tasks-q3" data-quadrant="delegate"></div>
+        </div>
+
+        <!-- Q4: Not Urgent & Not Important (ELIMINATE) -->
+        <div class="matrix-quadrant q4" data-quadrant="eliminate">
+          <div class="quadrant-header">
+            <div>
+              <div class="quadrant-title" style="color: #90a4ae;">🗑️ Q4: Neither Urgent Nor Important (Eliminate)</div>
+              <div class="quadrant-desc">Distractions, low-value busywork, deprioritized items</div>
+            </div>
+            <span class="column-count" id="count-q4">0</span>
+          </div>
+          <div class="quadrant-tasks" id="tasks-q4" data-quadrant="eliminate"></div>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- Toolbar -->
-  <div class="toolbar">
-    <div class="search-box">
-      <span class="search-icon">🔍</span>
-      <input type="text" id="search-input" placeholder="Search tasks..." aria-label="Search tasks">
-    </div>
+  <!-- VIEW 3: Analytics & Productivity Reports -->
+  <div class="view-container" id="view-analytics">
+    <div class="analytics-container">
+      <div class="analytics-toolbar">
+        <div>
+          <h2 style="font-size: 1.15rem; font-weight: 800;">📊 Productivity & Velocity Analytics</h2>
+          <p style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 2px;">
+            Real-time throughput metrics, cycle times, time tracking and completion velocity.
+          </p>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <select class="filter-select" id="analytics-range" aria-label="Date Range">
+            <option value="7">Last 7 Days</option>
+            <option value="14">Last 14 Days</option>
+            <option value="30" selected>Last 30 Days</option>
+          </select>
+          <a class="btn btn-ghost" href="/api/export/csv" download title="Download Tasks CSV">📥 Export CSV</a>
+          <a class="btn btn-ghost" href="/api/export/backup" download title="Download JSON Backup">💾 Export JSON</a>
+        </div>
+      </div>
 
-    <div class="filter-group">
-      <span class="filter-label">Priority</span>
-      <select class="filter-select" id="filter-priority" aria-label="Filter by priority">
-        <option value="all">All</option>
-        <option value="critical">Critical</option>
-        <option value="high">High</option>
-        <option value="medium">Medium</option>
-        <option value="low">Low</option>
-      </select>
-    </div>
+      <!-- KPI summary metrics -->
+      <div class="analytics-kpis">
+        <div class="kpi-card">
+          <div class="kpi-label">Completion Rate</div>
+          <div class="kpi-value" id="kpi-completion-rate">0%</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Completed Tasks</div>
+          <div class="kpi-value" id="kpi-completed">0</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Active Work Items</div>
+          <div class="kpi-value" id="kpi-active">0</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Overdue Tasks</div>
+          <div class="kpi-value" id="kpi-overdue" style="color: var(--neon-red);">0</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Avg Cycle Time</div>
+          <div class="kpi-value" id="kpi-cycle-time">0h</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Logged vs Est. Time</div>
+          <div class="kpi-value" id="kpi-time-ratio">0m / 0m</div>
+        </div>
+      </div>
 
-    <div class="filter-group">
-      <span class="filter-label">Sort</span>
-      <select class="filter-select" id="sort-select" aria-label="Sort by">
-        <option value="position">Position</option>
-        <option value="priority">Priority</option>
-        <option value="due_date">Due Date</option>
-        <option value="created_at">Created</option>
-        <option value="title">Title</option>
-      </select>
+      <!-- Analytics Charts -->
+      <div class="analytics-charts-grid">
+        <!-- Velocity Chart -->
+        <div class="chart-card">
+          <div class="chart-title">📈 Daily Task Completion Velocity</div>
+          <div class="bar-chart-body" id="chart-velocity">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+        <!-- Priority Distribution -->
+        <div class="chart-card">
+          <div class="chart-title">🎯 Priority Distribution</div>
+          <div class="bar-chart-body" id="chart-priority">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+        <!-- Status Distribution -->
+        <div class="chart-card">
+          <div class="chart-title">⚡ Column / Status Distribution</div>
+          <div class="bar-chart-body" id="chart-status">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+        <!-- Eisenhower Quadrants -->
+        <div class="chart-card">
+          <div class="chart-title">🧩 Eisenhower Quadrants Distribution</div>
+          <div class="bar-chart-body" id="chart-quadrant">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- Board -->
-  <main class="main-content">
-    <div class="board-view" id="board">
-      <!-- To Do Column -->
-      <div class="board-column column-todo" data-status="todo">
-        <div class="column-header">
-          <div class="column-title">
-            <span class="column-dot"></span>
-            To Do
-          </div>
-          <span class="column-count" id="count-todo">0</span>
-        </div>
-        <div class="column-tasks" id="tasks-todo" data-status="todo"></div>
-      </div>
+  <!-- Floating Action Button -->
+  <button class="fab-add" id="fab-add" title="Create New Task (Press 'n')">＋</button>
 
-      <!-- In Progress Column -->
-      <div class="board-column column-progress" data-status="in_progress">
-        <div class="column-header">
-          <div class="column-title">
-            <span class="column-dot"></span>
-            In Progress
-          </div>
-          <span class="column-count" id="count-progress">0</span>
-        </div>
-        <div class="column-tasks" id="tasks-progress" data-status="in_progress"></div>
-      </div>
-
-      <!-- Done Column -->
-      <div class="board-column column-done" data-status="done">
-        <div class="column-header">
-          <div class="column-title">
-            <span class="column-dot"></span>
-            Done
-          </div>
-          <span class="column-count" id="count-done">0</span>
-        </div>
-        <div class="column-tasks" id="tasks-done" data-status="done"></div>
-      </div>
-    </div>
-  </main>
-
-  <!-- FAB -->
-  <button class="fab" id="fab-add" title="Add new task" aria-label="Add new task">＋</button>
 </div>
 
-<!-- Create/Edit Task Modal -->
+<!-- ================= MODALS ================= -->
+
+<!-- 1. Task Create / Edit Modal -->
 <div class="modal-overlay" id="task-modal">
-  <div class="modal">
+  <div class="modal modal-lg">
     <div class="modal-header">
-      <h2 class="modal-title" id="modal-title">New Task</h2>
+      <h3 class="modal-title" id="modal-title">New Task</h3>
       <button class="btn btn-ghost btn-icon" id="modal-close" aria-label="Close modal">✕</button>
     </div>
+
     <form id="task-form">
       <div class="modal-body">
         <input type="hidden" id="task-id">
 
+        <!-- Title -->
         <div class="form-group">
-          <label class="form-label" for="task-title-input">Title</label>
-          <input class="form-input" id="task-title-input" type="text" placeholder="What needs to be done?" required autocomplete="off">
+          <label class="form-label" for="task-title-input">Title *</label>
+          <input class="form-input" id="task-title-input" placeholder="What needs to be done?" required autocomplete="off">
         </div>
 
+        <!-- Description -->
         <div class="form-group">
           <label class="form-label" for="task-desc-input">Description</label>
-          <textarea class="form-textarea" id="task-desc-input" placeholder="Add more details..." rows="3"></textarea>
+          <textarea class="form-textarea" id="task-desc-input" placeholder="Add rich context, specifications or requirements..." rows="3"></textarea>
         </div>
 
+        <!-- Row 1: Priority & Column Status -->
         <div class="form-row">
           <div class="form-group">
             <label class="form-label" for="task-priority-input">Priority</label>
@@ -156,54 +351,348 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="task-status-input">Status</label>
+            <label class="form-label" for="task-status-input">Column / Workflow</label>
             <select class="form-select" id="task-status-input">
-              <option value="todo">To Do</option>
-              <option value="in_progress">In Progress</option>
-              <option value="done">Done</option>
+              <!-- Dynamically populated from DB columns -->
             </select>
           </div>
         </div>
 
-        <div class="form-group">
-          <label class="form-label" for="task-due-input">Due Date</label>
-          <input class="form-input" id="task-due-input" type="date">
+        <!-- Row 2: Assignee & Recurrence -->
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="task-assignee-input">Assignee (Multi-user)</label>
+            <select class="form-select" id="task-assignee-input">
+              <option value="">Unassigned</option>
+              <!-- Dynamically populated from DB users -->
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="task-recurrence-input">Recurrence Rule</label>
+            <select class="form-select" id="task-recurrence-input">
+              <option value="none" selected>None (One-time)</option>
+              <option value="daily">🔁 Daily</option>
+              <option value="weekly">🔁 Weekly (+7 days)</option>
+              <option value="biweekly">🔁 Bi-weekly (+14 days)</option>
+              <option value="monthly">🔁 Monthly (+1 month)</option>
+            </select>
+          </div>
         </div>
 
+        <!-- Row 3: Due Date & Eisenhower Quadrant -->
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="task-due-input">Due Date</label>
+            <input class="form-input" id="task-due-input" type="date">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="task-quadrant-input">Eisenhower Quadrant</label>
+            <select class="form-select" id="task-quadrant-input">
+              <option value="do_first">🔥 Q1: Do First (Urgent & Important)</option>
+              <option value="schedule" selected>📅 Q2: Schedule (Important, Not Urgent)</option>
+              <option value="delegate">👥 Q3: Delegate (Urgent, Not Important)</option>
+              <option value="eliminate">🗑️ Q4: Eliminate (Low Value / Distraction)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Time Tracking & Estimation -->
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="task-est-time">Estimated Duration (Minutes)</label>
+            <input class="form-input" id="task-est-time" type="number" min="0" step="5" placeholder="e.g. 60">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Logged Duration</label>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <input class="form-input" id="quick-log-minutes" type="number" min="1" step="5" placeholder="+ Add mins">
+              <button type="button" class="btn" id="btn-quick-log-time">Log</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Subtasks Checklist Section (Only visible for existing or active tasks) -->
+        <div class="checklist-section" id="section-subtasks">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span class="form-label" style="margin: 0;">Subtasks & Nested Checklist</span>
+            <span id="subtasks-count-pill" style="font-size: 0.72rem; color: var(--text-muted);">0 items</span>
+          </div>
+          <div id="subtasks-list" style="margin-bottom: 8px;"></div>
+          <div style="display: flex; gap: 8px;">
+            <input class="form-input" id="new-subtask-title" placeholder="Add a subtask step..." style="flex: 1;">
+            <button type="button" class="btn" id="btn-add-subtask">+ Add Step</button>
+          </div>
+        </div>
+
+        <!-- File Attachments & Document Uploads -->
+        <div class="checklist-section" id="section-attachments">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span class="form-label" style="margin: 0;">File Attachments & Web Links</span>
+            <span id="attachments-count-pill" style="font-size: 0.72rem; color: var(--text-muted);">0 files</span>
+          </div>
+          <div id="attachments-list" style="margin-bottom: 8px;"></div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <input type="file" id="file-upload-input" style="display: none;">
+            <button type="button" class="btn" id="btn-trigger-upload">📎 Upload Document / Image</button>
+            <button type="button" class="btn btn-ghost" id="btn-add-weblink">🔗 Attach Web URL</button>
+          </div>
+        </div>
+
+        <!-- Custom Fields (Budget, Client, Story Points, etc.) -->
+        <div class="checklist-section">
+          <span class="form-label" style="display: block; margin-bottom: 6px;">Custom Metadata Fields</span>
+          <div class="form-row">
+            <input class="form-input" id="cf-client" placeholder="Client Name (e.g. Acme Corp)">
+            <input class="form-input" id="cf-budget" placeholder="Budget (e.g. $5,000)">
+          </div>
+          <div class="form-row" style="margin-top: 6px;">
+            <input class="form-input" id="cf-points" type="number" placeholder="Story Points (e.g. 5)">
+            <input class="form-input" id="cf-risk" placeholder="Risk Level (e.g. Low, High)">
+          </div>
+        </div>
+
+        <!-- Tags -->
         <div class="form-group">
           <label class="form-label">Tags</label>
           <div class="tag-input-container" id="tag-container">
             <input class="tag-input" id="tag-input" type="text" placeholder="Add tag and press Enter..." autocomplete="off">
           </div>
         </div>
+
+        <!-- Public Share Token -->
+        <div id="share-link-box" style="display: none; background: var(--bg-elevated); padding: 10px; border-radius: 8px; font-size: 0.78rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span>Public Task Sharing Link:</span>
+            <button type="button" class="btn btn-ghost" id="btn-copy-share-token" style="font-size: 0.75rem;">📋 Copy Link</button>
+          </div>
+          <input class="form-input" id="share-link-input" readonly style="font-family: monospace; font-size: 0.75rem; margin-top: 4px;">
+        </div>
+
       </div>
 
       <div class="modal-footer">
         <button type="button" class="btn" id="btn-cancel-task">Cancel</button>
-        <button type="submit" class="btn btn-primary" id="btn-save-task">Create Task</button>
+        <button type="submit" class="btn btn-primary" id="btn-save-task">Save Task</button>
       </div>
     </form>
   </div>
 </div>
 
-<!-- Delete Confirmation Modal -->
+<!-- 2. Delete Confirmation Modal -->
 <div class="modal-overlay" id="delete-modal">
-  <div class="modal confirm-dialog">
-    <div class="modal-body">
-      <div class="confirm-icon">🗑️</div>
-      <p class="confirm-text">
-        Delete <span class="confirm-task-name" id="delete-task-name"></span>?<br>
-        This action cannot be undone.
+  <div class="modal" style="max-width: 400px;">
+    <div class="modal-body" style="text-align: center; padding: 24px 18px;">
+      <div style="font-size: 2.2rem; margin-bottom: 8px;">🗑️</div>
+      <p style="font-weight: 700; font-size: 1rem; margin-bottom: 4px;">
+        Delete <span id="delete-task-name"></span>?
+      </p>
+      <p style="font-size: 0.8rem; color: var(--text-secondary);">
+        This action cannot be undone. All subtasks, time logs, and attachments will be deleted.
       </p>
     </div>
     <div class="modal-footer" style="justify-content: center;">
       <button class="btn" id="btn-cancel-delete">Cancel</button>
-      <button class="btn btn-danger" id="btn-confirm-delete">Delete</button>
+      <button class="btn btn-danger" id="btn-confirm-delete">Delete Task</button>
     </div>
   </div>
 </div>
 
-<!-- Wear OS Smartwatch Companion Modal -->
+<!-- 3. Settings, Data Backup & Integrations Modal -->
+<div class="modal-overlay" id="settings-modal">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h3 class="modal-title">⚙️ Workspace Settings, Data Backups & Integrations</h3>
+      <button class="btn btn-ghost btn-icon" id="settings-modal-close">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Section: Data Backup & Restore -->
+      <div class="checklist-section">
+        <h4 style="font-size: 0.92rem; font-weight: 700; margin-bottom: 4px;">💾 Database Backups & Portability</h4>
+        <p style="font-size: 0.78rem; color: var(--text-secondary); margin-bottom: 12px;">
+          Export complete database snapshots (tasks, subtasks, time logs, columns, users) or restore from an earlier backup.
+        </p>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <a class="btn btn-primary" href="/api/export/backup" download>📥 Download Full JSON Backup</a>
+          <a class="btn" href="/api/export/csv" download>📊 Download Tasks CSV</a>
+          <input type="file" id="backup-restore-input" accept=".json" style="display: none;">
+          <button type="button" class="btn" id="btn-trigger-restore">🔄 Restore from JSON</button>
+        </div>
+      </div>
+
+      <!-- Section: Google Calendar & iCalendar Feed -->
+      <div class="checklist-section">
+        <h4 style="font-size: 0.92rem; font-weight: 700; margin-bottom: 4px;">📅 Google Calendar / iCalendar Sync</h4>
+        <p style="font-size: 0.78rem; color: var(--text-secondary); margin-bottom: 8px;">
+          Subscribe directly to all your TaskFlow deadlines in Google Calendar, Apple Calendar, or Outlook via RFC 5545 feed.
+        </p>
+        <div style="display: flex; gap: 8px;">
+          <input class="form-input" id="cal-feed-url" readonly style="font-family: monospace; font-size: 0.75rem; flex: 1;">
+          <button type="button" class="btn" id="btn-copy-cal-url">Copy Feed URL</button>
+        </div>
+      </div>
+
+      <!-- Section: User Profile & API Key Authentication -->
+      <div class="checklist-section">
+        <h4 style="font-size: 0.92rem; font-weight: 700; margin-bottom: 4px;">🔑 Current User & API Key</h4>
+        <p style="font-size: 0.78rem; color: var(--text-secondary); margin-bottom: 8px;">
+          Authenticate external scripts, terminal curl requests, or AI agents using your personal API key.
+        </p>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <input class="form-input" id="current-user-apikey" readonly style="font-family: monospace; font-size: 0.75rem; flex: 1;">
+          <button type="button" class="btn" id="btn-copy-apikey">Copy Key</button>
+        </div>
+      </div>
+
+      <!-- Section: Outbound Webhooks (Slack/Discord/Bestie) -->
+      <div class="checklist-section">
+        <h4 style="font-size: 0.92rem; font-weight: 700; margin-bottom: 4px;">⚡ Outbound Webhooks</h4>
+        <p style="font-size: 0.78rem; color: var(--text-secondary); margin-bottom: 8px;">
+          Push real-time task notifications to Slack channels, Discord webhooks, or Digital Bestie.
+        </p>
+        <div id="webhooks-list" style="margin-bottom: 8px;"></div>
+        <div style="display: flex; gap: 8px;">
+          <input class="form-input" id="new-webhook-url" placeholder="https://hooks.slack.com/services/... or http://127.0.0.1:3848/webhook" style="flex: 1;">
+          <button type="button" class="btn" id="btn-add-webhook">+ Add Webhook</button>
+        </div>
+      </div>
+
+      <!-- Section: Dynamic Column Customization -->
+      <div class="checklist-section">
+        <h4 style="font-size: 0.92rem; font-weight: 700; margin-bottom: 4px;">📋 Custom Workflow Columns</h4>
+        <p style="font-size: 0.78rem; color: var(--text-secondary); margin-bottom: 8px;">
+          Define custom statuses beyond the standard 3 columns (e.g. Backlog, Testing, Blocked, Review).
+        </p>
+        <div id="columns-manage-list" style="margin-bottom: 8px;"></div>
+        <div style="display: flex; gap: 8px;">
+          <input class="form-input" id="new-col-title" placeholder="New column name (e.g. Testing)" style="flex: 1;">
+          <button type="button" class="btn" id="btn-create-custom-col">+ Add Column</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-primary" id="btn-close-settings">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- 4. Keyboard Shortcuts Modal -->
+<div class="modal-overlay" id="shortcuts-modal">
+  <div class="modal" style="max-width: 440px;">
+    <div class="modal-header">
+      <h3 class="modal-title">⌨️ Keyboard Shortcuts</h3>
+      <button class="btn btn-ghost btn-icon" id="shortcuts-modal-close">✕</button>
+    </div>
+    <div class="modal-body" style="font-size: 0.85rem;">
+      <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border-subtle);">
+        <span>Select next / previous card</span>
+        <kbd style="background: var(--bg-elevated); padding: 2px 6px; border-radius: 4px;">j / k</kbd>
+      </div>
+      <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border-subtle);">
+        <span>Move card to column 1, 2, 3, 4</span>
+        <kbd style="background: var(--bg-elevated); padding: 2px 6px; border-radius: 4px;">1 - 4</kbd>
+      </div>
+      <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border-subtle);">
+        <span>Create new task</span>
+        <kbd style="background: var(--bg-elevated); padding: 2px 6px; border-radius: 4px;">n</kbd>
+      </div>
+      <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border-subtle);">
+        <span>Edit selected task</span>
+        <kbd style="background: var(--bg-elevated); padding: 2px 6px; border-radius: 4px;">e</kbd>
+      </div>
+      <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border-subtle);">
+        <span>Delete selected task</span>
+        <kbd style="background: var(--bg-elevated); padding: 2px 6px; border-radius: 4px;">Backspace / Del</kbd>
+      </div>
+      <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border-subtle);">
+        <span>Focus search bar</span>
+        <kbd style="background: var(--bg-elevated); padding: 2px 6px; border-radius: 4px;">/</kbd>
+      </div>
+      <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border-subtle);">
+        <span>Toggle Dark / Light mode</span>
+        <kbd style="background: var(--bg-elevated); padding: 2px 6px; border-radius: 4px;">t</kbd>
+      </div>
+      <div style="display: flex; justify-content: space-between; padding: 6px 0;">
+        <span>Close modal</span>
+        <kbd style="background: var(--bg-elevated); padding: 2px 6px; border-radius: 4px;">Esc</kbd>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 5. Interactive Onboarding & Feature Guide Modal -->
+<div class="modal-overlay" id="tour-modal">
+  <div class="modal" style="max-width: 520px;">
+    <div class="modal-header">
+      <h3 class="modal-title">💡 Welcome to TaskFlow Enterprise</h3>
+      <button class="btn btn-ghost btn-icon" id="tour-modal-close">✕</button>
+    </div>
+    <div class="modal-body" style="font-size: 0.88rem; line-height: 1.5;">
+      <div style="display: flex; gap: 12px; align-items: flex-start; margin-bottom: 14px;">
+        <span style="font-size: 1.5rem;">📋</span>
+        <div>
+          <strong>1. Dynamic Custom Workflows</strong>
+          <p style="font-size: 0.8rem; color: var(--text-secondary);">Go beyond 3 columns. Add custom columns like Review, QA, or Blocked with WIP limit constraints.</p>
+        </div>
+      </div>
+      <div style="display: flex; gap: 12px; align-items: flex-start; margin-bottom: 14px;">
+        <span style="font-size: 1.5rem;">🎯</span>
+        <div>
+          <strong>2. Eisenhower Matrix (2x2)</strong>
+          <p style="font-size: 0.8rem; color: var(--text-secondary);">Switch between Board, 2x2 Matrix, and Analytics views to prioritize Urgent vs. Important work.</p>
+        </div>
+      </div>
+      <div style="display: flex; gap: 12px; align-items: flex-start; margin-bottom: 14px;">
+        <span style="font-size: 1.5rem;">⏱️</span>
+        <div>
+          <strong>3. Live Stopwatch & Time Tracking</strong>
+          <p style="font-size: 0.8rem; color: var(--text-secondary);">Track live focus sessions with the 1-click stopwatch timer on any card, or log manual hours against estimates.</p>
+        </div>
+      </div>
+      <div style="display: flex; gap: 12px; align-items: flex-start; margin-bottom: 14px;">
+        <span style="font-size: 1.5rem;">🔁</span>
+        <div>
+          <strong>4. Automated Recurring Tasks & Subtasks</strong>
+          <p style="font-size: 0.8rem; color: var(--text-secondary);">Set Daily, Weekly, or Monthly recurrences. Completing a recurring task automatically spawns the next occurrence.</p>
+        </div>
+      </div>
+      <div style="display: flex; gap: 12px; align-items: flex-start;">
+        <span style="font-size: 1.5rem;">⌚</span>
+        <div>
+          <strong>5. Multi-User, Webhooks & Wear OS</strong>
+          <p style="font-size: 0.8rem; color: var(--text-secondary);">Collaborate with assignees, subscribe to calendar feeds, trigger webhooks, and sync live with Wear OS smartwatches.</p>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" id="btn-tour-get-started">Get Started</button>
+    </div>
+  </div>
+</div>
+
+<!-- 6. Share Preview Modal -->
+<div class="modal-overlay" id="share-modal">
+  <div class="modal" style="max-width: 480px;">
+    <div class="modal-header">
+      <h3 class="modal-title">🔗 Public Task Share Link</h3>
+      <button class="btn btn-ghost btn-icon" id="share-modal-close">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 8px;">
+        Anyone with this public share link can view this task, its subtasks, and attachments in read-only mode:
+      </p>
+      <input class="form-input" id="public-share-url" readonly style="font-family: monospace; font-size: 0.78rem; width: 100%;">
+      <div style="margin-top: 14px; text-align: center;">
+        <button class="btn btn-primary" id="btn-copy-public-link" style="width: 100%;">📋 Copy Public Link</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 7. Wear OS Smartwatch Companion Modal -->
 <div class="modal-overlay" id="wear-modal">
   <div class="modal wear-modal-container">
     <div class="modal-header" style="border-bottom: 1px solid var(--border-subtle); padding: 12px 18px;">
@@ -215,7 +704,6 @@
     </div>
 
     <div class="wear-modal-body">
-      <!-- Outer Watch Simulator -->
       <div class="wear-chassis-wrap">
         <div class="wear-strap wear-strap-top"></div>
         <div class="wear-bezel">
@@ -224,9 +712,7 @@
               <span id="wear-clock">10:45</span>
               <span>⚡ 94%</span>
             </div>
-            <div class="wear-content" id="wear-content">
-              <!-- Injected by JS -->
-            </div>
+            <div class="wear-content" id="wear-content"></div>
             <div class="wear-dock">
               <button class="wear-dock-btn active" data-tab="tasks" title="Duties Checklist">✓</button>
               <button class="wear-dock-btn" data-tab="voice" title="Voice Dictation">🎙️</button>
@@ -237,11 +723,10 @@
         <div class="wear-strap wear-strap-bottom"></div>
       </div>
 
-      <!-- Info & Quick Actions Footer -->
       <div class="wear-info-card">
-        <h4>Wear OS Ecosystem Status: <span class="wear-badge-online">● Ready</span></h4>
+        <h4>Wear OS Ecosystem: <span class="wear-badge-online">● Ready</span></h4>
         <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">
-          Real-time sync between your wrist and TaskFlow. 1-tap duty checkoff, voice capture, and glanceable tiles.
+          Real-time sync between your wrist and TaskFlow. 1-tap checkoff, voice capture, and tiles.
         </p>
         <div style="margin-top: 8px; font-family: monospace; font-size: 0.7rem; color: var(--neon-cyan); background: rgba(0,0,0,0.3); padding: 6px 10px; border-radius: 6px;">
           Endpoint: http://localhost:3847/api/wear
