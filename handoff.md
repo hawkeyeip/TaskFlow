@@ -48,6 +48,8 @@ taskflow/
 | Phase 3 | Integration + seed data | COMPLETE |
 | Phase 4 | Digital Bestie Electron Native Integration | COMPLETE |
 | Phase 5 | Google Wear OS Compatibility & Scaffolding | COMPLETE |
+| Phase 6 | Dynamic MCP Router, DAG Executor & Unified Memory | COMPLETE |
+| Phase 7 | Bestie Setup Integration (RAG, Ingestion, Telemetry & HITL) | COMPLETE |
 
 ---
 
@@ -55,52 +57,55 @@ taskflow/
 
 ```
 STATUS: AWAITING_REVIEW
-CURRENT_PHASE: PHASE 5 COMPLETE — GOOGLE WEAR OS COMPATIBILITY
-```
+CURRENT_PHASE: PHASE 7 COMPLETE — DIGITAL BESTIE DEEP INTEGRATION (RAG, INGESTION, TELEMETRY & HITL GATEWAY)
 
 ### COMPLETED_ACTIONS
 
-- **Standalone TaskFlow & GitHub Repo (`hawkeyeip/TaskFlow`)**:
-  - Initialized git repo at `/Users/brandonheisey/Projects/taskflow`
-  - Created and pushed to public GitHub repo: `https://github.com/hawkeyeip/TaskFlow`
-  - Created comprehensive `README.md` with API docs, keyboard shortcuts, and architecture.
+- **Pillar 2: Knowledge Retrieval & Vector Store (RAG)**:
+  - `src/services/rag.js`: Built sovereign local RAG service connecting Digital Bestie directly to Qdrant vector database (`http://localhost:6333`, collection `hawkeye_memory`) and Ollama `nomic-embed-text` (`http://localhost:11434`).
+  - `src/main.js`: Added pre-flight vector retrieval hook in `ollama:chat` handler; dynamically injects `## AUTONOMOUS RETRIEVAL CONTEXT (Vector Memory)` containing relevant historical memory and resources into the active chat prompt.
+  - `src/main.js` & `src/preload.js`: Exposed `rag:search`, `rag:index`, and `rag:getStats` IPC channels.
 
-- **Google Wear OS Native App Scaffolding (`wear/`)**:
-  - `wear/build.gradle.kts` — Configured Android/Kotlin/Compose dependencies (`androidx.wear.compose`, `androidx.wear.tiles`, `androidx.wear.watchface`, OkHttp).
-  - `wear/src/main/AndroidManifest.xml` — Declared `android.hardware.type.watch`, `TaskFlowTileService`, and `TaskComplicationService`.
-  - `wear/src/main/java/com/hawkeyeip/taskflow/wear/MainActivity.kt` — Wear OS launcher activity.
-  - `wear/src/main/java/com/hawkeyeip/taskflow/wear/presentation/TaskFlowWearApp.kt` — Jetpack Compose rotary-optimized task checklist, 1-tap haptic checkoff, and speech-to-text dictation.
-  - `wear/src/main/java/com/hawkeyeip/taskflow/wear/tile/TaskFlowTileService.kt` — Glanceable Wear OS Tile for instant wrist status without opening the app.
-  - `wear/src/main/java/com/hawkeyeip/taskflow/wear/complication/TaskComplicationService.kt` — Watch face complication data provider.
-  - `wear/src/main/java/com/hawkeyeip/taskflow/wear/network/TaskFlowApiClient.kt` — Battery-optimized OkHttp coroutines client.
-  - `wear/README.md` — Step-by-step build, ADB Wi-Fi pairing, and deployment instructions for Pixel Watch / Galaxy Watch.
+- **Pillar 3: Ingestion & Data Capture Engine**:
+  - `src/services/ingestion.js`: Implemented universal data ingestion and triage engine with native HTTP webhook receiver listening on `http://127.0.0.1:3848` (`/api/webhook/universal`, `/api/webhook/github`, `/api/webhook/email`).
+  - Auto-triage classifier: automatically detects actionable items and creates prioritized tickets in TaskFlow, while registering referential content in Superbrain and embedding 768-dimensional vectors in Qdrant.
+  - `src/main.js`: Automatically spawns ingestion webhook receiver on app ready; added `ingestion:process` and `ingestion:getStats` IPC handlers.
 
-- **Backend Wear OS Gateway**:
-  - `backend/routes/wear.js` — Lightweight endpoints for Wear OS: `/api/wear/tasks`, `/api/wear/tasks/:id/toggle`, `/api/wear/tasks/quick-add`, `/api/wear/tile`, `/api/wear/complication`.
-  - Tested all 5 endpoints via curl with successful HTTP 200/201 responses.
+- **Pillar 4: Telemetry & Observability Dashboard**:
+  - `src/services/telemetry.js`: Built real-time telemetry engine tracking token economics, prompt/eval tokens, tokens/sec, hardware load (Apple Silicon CPU, Unified RAM, Electron heap), MCP tool invocations, and computed dollars saved vs OpenAI GPT-4 / Claude 3.5 Sonnet.
+  - `src/services/ollama.js`: Wired `recordLLMCall` into streaming chat completion and error handlers.
+  - `index.html` & `src/renderer.js`: Built full-screen `⚡ Telemetry` view (`#view-telemetry`) with 4 glowing metric KPI cards, hardware utilization gauge, universal webhook monitor, and live multi-agent activity event trace table.
+  - `src/styles/index.css`: Added glassmorphic dark-mode styling with neon accents for all telemetry cards, tables, and pills.
 
-- **Wear OS Smartwatch Companion & Interactive Simulator**:
-  - Integrated circular smartwatch bezel & strap simulation into both TaskFlow web app and Digital Bestie desktop app.
-  - Interactive tabs for Duty Checklist (1-tap checkoff), Voice Dictation simulation, and Wear OS Tile preview.
+- **Pillar 5: External Execution & Human-in-the-Loop (HITL) Gateway**:
+  - `src/services/execution-node.js`: Built outbound execution node (`send_email`, `webhook_dispatch`, `shell_command`, `file_export`) gated by strict Human-in-the-Loop authorization.
+  - Intercepts all outbound mutations into a pending approval queue (`~/.digital-bestie/pending_approvals.json`) with risk tiers (`low`, `medium`, `high`, `destructive`) and maintains an immutable audit trail (`~/.digital-bestie/execution_audit.json`).
+  - `index.html` & `src/renderer.js`: Built interactive approval card list and floating authorization modal (`#hitl-modal`) with 1-click `[Approve & Execute]` and `[Reject & Abort]` controls, plus real-time sidebar nav badge (`#hitl-nav-badge`).
+
+- **Automated Verification & Packaging**:
+  - `hawkeye-stack/tests/test_bestie_integration.js`: Automated 4-tier integration test suite validating RAG retrieval, webhook triage, telemetry economics, and HITL authorization (100% pass rate).
+  - `electron-forge package`: Clean production bundle and package for arm64 on darwin in 2s with zero warnings/errors.
 
 ### TEST_OUTPUT
 
 ```
-Backend Wear OS Endpoints:
-  GET /api/wear/tasks:         PASS - Lightweight JSON payload returned
-  GET /api/wear/tile:          PASS - Tile metrics & top duties returned
-  GET /api/wear/complication:  PASS - Watch face complication data returned
-  POST /api/wear/tasks/quick-add: PASS - Instant wrist duty created
-  POST /api/wear/tasks/:id/toggle: PASS - 1-tap duty toggled
+Digital Bestie Integration Suite:
+  [TEST 1/4] Knowledge Retrieval & Vector Store (RAG): PASS (Qdrant 18 vectors, preflight snippet injected)
+  [TEST 2/4] Ingestion & Webhook Capture Engine:      PASS (Webhook 3848 live, ACTIONABLE_TASK ticket spawned)
+  [TEST 3/4] Telemetry & Computational Economics:     PASS (3810 tokens, $0.14 saved vs GPT-4, 100% MCP rate)
+  [TEST 4/4] Outbound Execution & HITL Gateway:       PASS (HITL intercept, safe execution & audit logged)
+  Result: 4/4 TEST SUITES PASSED
 
-Digital Bestie Integration:
-  Syntax validation (node -c): PASS - All files valid
-  Electron Forge package:      PASS - Clean build and package
-GitHub Push:
-  Remote push to origin/main:  PASS - 22 files pushed to hawkeyeip/TaskFlow
+Hawkeye Agent Stack Suite:
+  7/7 Unit & DAG Tests: PASS in 0.393s
+
+Electron Forge Package:
+  Vite Main + Preload + Renderer: PASS
+  arm64 darwin package: PASS (Clean build in 2s)
 ```
 
 ### NEXT_ACTIONS
 
-- Open http://localhost:3847 and click "⌚ Wear OS" in the header to interact with the smartwatch simulator.
-- Open `wear/` in Android Studio or connect a physical Wear OS smartwatch via `adb pair` / `adb connect` to run the native watch app.
+- Launch the Digital Bestie desktop application via `npm start` to interact with the new `⚡ Telemetry` dashboard and test live chat with autonomous RAG retrieval.
+- Trigger external webhooks via `curl -X POST http://127.0.0.1:3848/api/webhook/universal -H "Content-Type: application/json" -d '{"text": "URGENT BUG: ...", "url": "https://..."}'`.
+- Test outbound action requests in the chat or terminal to observe real-time HITL authorization banners.
